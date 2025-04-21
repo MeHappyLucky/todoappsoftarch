@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, forwardRef, useImperativeHandle } from "react"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -10,30 +10,40 @@ import { useToast } from "@/hooks/use-toast"
 import { type TodoItem, fetchTodos, updateTodoStatus, deleteTodo } from "@/lib/todo-actions"
 import { EditTodoDialog } from "@/components/edit-todo-dialog"
 
-export function TodoList() {
+export type TodoListHandle = {
+  refreshTodos: () => Promise<void>;
+};
+
+export const TodoList = forwardRef<TodoListHandle>((props, ref) => {
   const [todos, setTodos] = useState<TodoItem[]>([])
   const [viewMode, setViewMode] = useState<"card" | "list">("card")
   const [isLoading, setIsLoading] = useState(true)
   const [editingTodo, setEditingTodo] = useState<TodoItem | null>(null)
   const { toast } = useToast()
 
-  useEffect(() => {
-    const loadTodos = async () => {
-      try {
-        const data = await fetchTodos()
-        setTodos(data)
-      } catch (error) {
-        toast({
-          variant: "destructive",
-          title: "Failed to load todos",
-          description: "Please try again later.",
-        })
-      } finally {
-        setIsLoading(false)
-      }
+  const refreshTodos = async () => {
+    setIsLoading(true)
+    try {
+      const data = await fetchTodos()
+      setTodos(data)
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Failed to load todos",
+        description: "Please try again later.",
+      })
+    } finally {
+      setIsLoading(false)
     }
+  }
 
-    loadTodos()
+  // Expose the refresh function to parent components
+  useImperativeHandle(ref, () => ({
+    refreshTodos
+  }));
+
+  useEffect(() => {
+    refreshTodos()
   }, [toast])
 
   const handleStatusChange = async (id: string, completed: boolean) => {
@@ -44,6 +54,8 @@ export function TodoList() {
         title: `Task ${completed ? "completed" : "marked as in progress"}`,
         description: "Task status updated successfully.",
       })
+      
+      refreshTodos()
     } catch (error) {
       toast({
         variant: "destructive",
@@ -61,6 +73,8 @@ export function TodoList() {
         title: "Task deleted",
         description: "Task has been removed successfully.",
       })
+      
+      refreshTodos()
     } catch (error) {
       toast({
         variant: "destructive",
@@ -77,6 +91,8 @@ export function TodoList() {
   const handleEditSave = (updatedTodo: TodoItem) => {
     setTodos(todos.map((todo) => (todo.id === updatedTodo.id ? updatedTodo : todo)))
     setEditingTodo(null)
+    
+    refreshTodos()
   }
 
   if (isLoading) {
@@ -181,4 +197,4 @@ export function TodoList() {
       )}
     </div>
   )
-}
+})

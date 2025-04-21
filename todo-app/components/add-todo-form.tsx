@@ -11,7 +11,11 @@ import { useToast } from "@/hooks/use-toast"
 import { addTodo } from "@/lib/todo-actions"
 import { PlusCircle, X } from "lucide-react"
 
-export function AddTodoForm() {
+interface AddTodoFormProps {
+  onTodoAdded?: () => void;
+}
+
+export function AddTodoForm({ onTodoAdded }: AddTodoFormProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
@@ -48,6 +52,11 @@ export function AddTodoForm() {
       setTitle("")
       setDescription("")
       setIsExpanded(false)
+      
+      // Call the callback to refresh the todo list
+      if (onTodoAdded) {
+        onTodoAdded();
+      }
     } catch (error) {
       toast({
         variant: "destructive",

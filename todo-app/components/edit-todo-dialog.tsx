@@ -55,6 +55,7 @@ export function EditTodoDialog({ todo, open, onOpenChange, onSave }: EditTodoDia
       }
 
       await updateTodo(updatedTodo)
+      
       onSave(updatedTodo)
 
       toast({

@@ -1,10 +1,10 @@
 "use client"
 
-import { TodoList } from "@/components/todo-list"
+import { TodoList, type TodoListHandle } from "@/components/todo-list"
 import { AddTodoForm } from "@/components/add-todo-form"
 import { UserNav } from "@/components/user-nav"
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { getCurrentUser } from "@/lib/auth-actions"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -16,6 +16,7 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [session, setSession] = useState<Session | null>(null)
+  const todoListRef = useRef<TodoListHandle>(null)
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -114,8 +115,8 @@ export default function DashboardPage() {
             </h1>
             <p className="text-muted-foreground">Manage your tasks and stay organized.</p>
           </div>
-          <AddTodoForm />
-          <TodoList />
+          <AddTodoForm onTodoAdded={() => todoListRef.current?.refreshTodos()} />
+          <TodoList ref={todoListRef} />
         </div>
       </main>
     </div>
